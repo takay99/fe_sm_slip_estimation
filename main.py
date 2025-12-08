@@ -28,21 +28,6 @@ def main():
     # 他のデータ列に NaN が残ってもプロットは可能ですが、時間軸は連続している必要があるため
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
-    # -----------
-
-    output_data.iloc[:, 1] = lowpassfilter.lowpass_filter(
-        output_data.iloc[:, 1], 1, 0.01
-    )
-    output_data.iloc[:, 2] = lowpassfilter.lowpass_filter(
-        output_data.iloc[:, 2], 1, 0.01
-    )
-    output_data.iloc[:, 4] = lowpassfilter.lowpass_filter(
-        output_data.iloc[:, 4], 1, 0.01
-    )
-    output_data.iloc[:, 5] = lowpassfilter.lowpass_filter(
-        output_data.iloc[:, 5], 1, 0.01
-    )
-
     figure, axe = all_plot_bool.all_plot_bool(output_data)
     # plt.show()
     # figure, ax = plt.subplots()
