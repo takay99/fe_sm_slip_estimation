@@ -8,9 +8,7 @@ import lowpassfilter
 
 def main():
     print("Hello from fe-sm-data-analize!")
-    # output_data = pd.read_csv(
-    #     "LOG00289.txt", header=None, delim_whitespace=False, error_bad_lines=False
-    # )
+
     output_data = pd.read_csv(
         "LOG00289.txt",
         header=None,
