@@ -27,12 +27,6 @@ def main():
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
     figure, axe = all_plot_bool.all_plot_bool(output_data)
-    # plt.show()
-    # figure, ax = plt.subplots()
-    # time = output_data.iloc[:, 0] / 1000
-    # ax.plot(time, output_data.iloc[:, 2], label="acc x r")
-    # ax.plot(time, lowpass_acc_x_r, label="lowpass acc x r")
-    # ax.legend()
 
     print("end")
 
