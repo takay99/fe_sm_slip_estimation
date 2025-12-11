@@ -32,7 +32,7 @@ class vihicleStateObserver:
         # 1. 状態行列 M (A-K(ωz)C) の計算
         # ----------------------------------------------------
         M_11 = -self.a0 - self.a1 * np.abs(omega_z)
-        M_12 = -omega_z + self.a2 * F_t
+        M_12 = omega_z
         M_21 = -(self.a2 + 1) * omega_z
         M_22 = -F_t
 
@@ -47,7 +47,6 @@ class vihicleStateObserver:
         # ----------------------------------------------------
         # 2. 加速度入力項 (B * A_inputs) の計算
         # ----------------------------------------------------
-        dV_hat_dt_B = np.array([Ax, Ay])
         dV_hat_dt_B = np.array([Ax, Ay])
 
         # ----------------------------------------------------
@@ -120,9 +119,11 @@ if __name__ == "__main__":
 
     # 2秒後からカーブを開始 (Ax=0, Ay=3m/s^2, omega_z=10deg/s)
     curve_start_index = int(2.0 / dt_val)
-    curve_end_index = int(4.0 / dt_val)
+    curve_end_index = int(10.0 / dt_val)
 
-    Ay_data[curve_start_index:curve_end_index] = 3.0
+    Ay_data[curve_start_index:300] = 20 * np.deg2rad(10.0) * 0.8
+    Ay_data[301:curve_end_index] = 20 * np.deg2rad(10.0)
+
     omega_z_data[curve_start_index:curve_end_index] = np.deg2rad(10.0)
     F_t_data[curve_start_index:curve_end_index] = 0.0  # カーブ中はFはゼロ
 
