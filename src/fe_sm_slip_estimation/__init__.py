@@ -1,12 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import all_plot_bool
+from . import all_plot_bool
 from matplotlib.widgets import CheckButtons
-import lowpassfilter
+from . import lowpassfilter
 
 
-def main():
+def main() -> None:
     print("Hello from fe-sm-data-analize!")
 
     output_data = pd.read_csv(
@@ -29,8 +29,3 @@ def main():
     figure, axe = all_plot_bool.all_plot_bool(output_data)
 
     print("end")
-
-
-if __name__ == "__main__":
-
-    main()
