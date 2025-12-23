@@ -24,9 +24,19 @@ if __name__ == "__main__":
     # 他のデータ列に NaN が残ってもプロットは可能ですが、時間軸は連続している必要があるため
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
-    for i in range(1, len(output_data.iloc[:,0])):
-       print(f"i: {output_data.iloc[i,0]}")
-       str = float(output_data.iloc[i,11])
-       str_dot = float(output_data.iloc[i,11]-output_data.iloc[i-1,11])/(float(output_data.iloc[i,0])-float(output_data.iloc[i-1,0]))
+    beta = float(0.0)
+    beta_dot = float(0.0)
 
-       
+    for i in range(1, len(output_data.iloc[:,0])):
+        print(f"i: {output_data.iloc[i,0]}")
+        
+        time = float(output_data.iloc[i,0]/1000.0)  # ms -> s
+        time_prev = float(output_data.iloc[i-1,0]/1000.0)  # ms -> s
+        
+        str = float(output_data.iloc[i,11])
+        str_dot = float(output_data.iloc[i,11]-output_data.iloc[i-1,11])/(time-time_prev)
+
+        omega_z = float(output_data.iloc[i,3]+output_data.iloc[i,6])/2.0
+        omega_z_dot = float((output_data.iloc[i,3]+output_data.iloc[i,6])-(output_data.iloc[i-1,3]+output_data.iloc[i-1,6]))/(time-time_prev)/2.0
+
+        print(f"steer: {str}, steer_dot: {str_dot}")
