@@ -97,7 +97,6 @@ if __name__ == "__main__":
     elif a_x >= Ax_threshold:
         # 急加速時（駆動スリップの可能性）：車輪速度が車体速度より高くなるため、最小値を選択
         V_est = min(v_FL, v_FR, v_RL, v_RR)
-
     else:  # a_x <= -Ax_threshold の場合
         # 急減速・制動時（ロックの可能性）：車輪速度が車体速度より低くなるため、最大値を選択
         V_est = max(v_FL, v_FR, v_RL, v_RR)

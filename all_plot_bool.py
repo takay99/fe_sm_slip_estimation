@@ -23,9 +23,9 @@ def all_plot_bool(output_data):
     (l6,) = ax.plot(time, output_data.iloc[:, 7], label="m acc 1")  # output_data(:,8)
     (l7,) = ax.plot(time, -output_data.iloc[:, 8], label="m acc 2")  # -output_data(:,9)
     (l8,) = ax.plot(
-        time, -output_data.iloc[:, 9], label="m vel 1"
+        time, -output_data.iloc[:, 9], label="m vel 1(f)"
     )  # -output_data(:,10)
-    (l9,) = ax.plot(time, output_data.iloc[:, 10], label="m vel 2")  # output_data(:,11)
+    (l9,) = ax.plot(time, output_data.iloc[:, 10], label="m vel 2(r)")  # output_data(:,11)
     (l10,) = ax.plot(time, output_data.iloc[:, 11], label="str")  # output_data(:,12)
     (l11,) = ax.plot(
         time, -output_data.iloc[:, 12] / 100, label="current1"
