@@ -185,7 +185,7 @@ if __name__ == "__main__":
     a2_val = 10
     dt_val = 0.01  # 100 Hzで実行 (論文にもあるように)
 
-    observer = vihicleStateObserver(a0_val, a1_val, a2_val, dt_val)
+    observer = VehicleStateObserver(a0_val, a1_val, a2_val, dt_val)
 
     # シミュレーションデータ (適当な値 - 直進から緩やかなカーブを想定)
     time_points = np.arange(0, 10, dt_val)
