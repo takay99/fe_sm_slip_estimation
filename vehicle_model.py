@@ -165,3 +165,5 @@ if __name__ == "__main__":
     plt.axis("equal")  # Equal scaling for x and y axes
     plt.legend()
     plt.show()
+
+    print(df[["time", "beta", "dot_phai", "phai", "x", "y"]].head())
