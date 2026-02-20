@@ -39,10 +39,10 @@ def rk4_step(
     assert len(k1) == len(current_integrate_value), "長さ一緒にしろ"
 
     # K2
-    arr = []
+    arr = np.array([])
     for i in range(len(current_integrate_value)):
         tmp = current_integrate_value[i] + 0.5 * h_step * k1[i]
-        arr.append(tmp)
+        arr = np.append(arr, tmp)
     if variation is None:
         k2 = f(arr, current_time + 0.5 * h_step)
     else:
@@ -50,10 +50,10 @@ def rk4_step(
     assert len(k2) == len(current_integrate_value), "長さ一緒にしろ"
 
     # K3
-    arr = []
+    arr = np.array([])
     for i in range(len(current_integrate_value)):
         tmp = current_integrate_value[i] + 0.5 * h_step * k2[i]
-        arr.append(tmp)
+        arr = np.append(arr, tmp)
     if variation is None:
         k3 = f(arr, current_time + 0.5 * h_step)
     else:
@@ -61,10 +61,10 @@ def rk4_step(
     assert len(k3) == len(current_integrate_value), "長さ一緒にしろ"
 
     # K4
-    arr = []
+    arr = np.array([])
     for i in range(len(current_integrate_value)):
         tmp = current_integrate_value[i] + h_step * k3[i]
-        arr.append(tmp)
+        arr = np.append(arr, tmp)
     if variation is None:
         k4 = f(arr, current_time + h_step)
     else:

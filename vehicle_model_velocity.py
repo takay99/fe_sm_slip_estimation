@@ -80,25 +80,97 @@ def sim_vehicle_model_velocity( x: Vector6 ,t,input: Vector5):
 
 if __name__ == "__main__":
     # Fxのテスト
-    delta = 0.1  # ステアリング角度 (ラジアン)
-    # tau = np.array([100.0, 100.0, 100.0, 100.0])  # 各輪のトルク (N*m)
-    tau = np.array([0.0, 0.0, 0.0, 0.0])  # 各輪のトルク (N*m)
-    input_vector = np.concatenate(([delta], tau))  # 入力ベクトル (ステアリング角度とトルク)
+    # delta = 0.1  # ステアリング角度 (ラジアン)
+    # # tau = np.array([100.0, 100.0, 100.0, 100.0])  # 各輪のトルク (N*m)
+    # tau = np.array([0.0, 0.0, 0.0, 0.0])  # 各輪のトルク (N*m)
+    # input_vector = np.concatenate(([delta], tau))  # 入力ベクトル (ステアリング角度とトルク)
 
 
-    velocity_x = 10.0  # 車両のx方向速度 (m/s)
-    velocity_y = 0.0   # 車両のy方向速度 (m/s)
-    dot_phai = 0.0     # ヨーレート (rad/s)
-    X = 0.0            # 車両のX座標 (m)
-    Y = 0.0            # 車両のY座標 (m)
-    phi = 0.0          # ヨー角 (rad)
-    x = np.array([velocity_x, velocity_y, dot_phai, X, Y, phi]).reshape(-1, 1)  # 状態ベクトル
-    time = 0.0         # 時間 (使用されない)
+    # velocity_x = 10.0  # 車両のx方向速度 (m/s)
+    # velocity_y = 0.0   # 車両のy方向速度 (m/s)
+    # dot_phai = 0.0     # ヨーレート (rad/s)
+    # X = 0.0            # 車両のX座標 (m)
+    # Y = 0.0            # 車両のY座標 (m)
+    # phi = 0.0          # ヨー角 (rad)
+    # x = np.array([velocity_x, velocity_y, dot_phai, X, Y, phi]).reshape(-1, 1)  # 状態ベクトル
+    # time = 0.0         # 時間 (使用されない)
 
-    x_dot = sim_vehicle_model_velocity(x, input_vector)
+    # x_dot = sim_vehicle_model_velocity(x,0, input_vector)
     
-    runge_kutta_result = runge_kutta.rk4_step(sim_vehicle_model_velocity,np.array([0,0,0,0,0,0]).reshape(-1, 1),0,0.01,input_vector )  # sample = np.array([1,2,3,4,5]).reshape(-1, 1)
+    # runge_kutta_result = runge_kutta.rk4_step(sim_vehicle_model_velocity,np.array([0,0,0,0,0,0]).reshape(-1, 1),0,0.01,input_vector )  # sample = np.array([1,2,3,4,5]).reshape(-1, 1)
 
 
-    print("\nx_dot (車両の状態変化率):")
-    print(x_dot)
+    # print("\nx_dot (車両の状態変化率):")
+    # print(x_dot)
+    finish_time = 5.0  # 終了時間 (秒)
+    dt = 0.01          # 刻み時間 (秒)
+    time_steps = np.arange(0, finish_time, dt)
+    
+    # 初期値の設定 [vx, vy, r, X, Y, phi]
+    # 初期速度 10m/s (36km/h) で直進状態から開始
+    initial_value = np.array([10.0, 0.0, 0.0, 0.0, 0.0, 0.0]).reshape(-1, 1)
+    
+    # 時系列入力データの作成 (例: 1秒後にステアリングを0.1rad切る)
+    # input_vector = [delta, tau_fl, tau_fr, tau_rl, tau_rr]
+    inputs = []
+    for t in time_steps:
+        if t < 1.0:
+            delta = 0.0
+        else:
+            delta = 0.1 # 1秒後にハンドルを切る
+        
+        tau = np.zeros(4) # トルクは0でコースト走行
+        inputs.append(np.concatenate(([delta], tau)))
+    
+    # --- シミュレーション実行 ---
+    results = []
+    current_x = initial_value
+    
+    print(f"Starting simulation: 0.0s to {finish_time}s...")
+    
+    for i, t in enumerate(time_steps):
+        # 現在のステップの入力を取得
+        u = inputs[i]
+        
+        # 結果を保存
+        results.append(current_x.flatten())
+        
+        # RK4による状態更新
+        current_x = runge_kutta.rk4_step(
+            sim_vehicle_model_velocity,
+            current_x,
+            t,
+            dt,
+            variation=u
+        )
+    
+    # 結果のデータフレーム化
+    df = pd.DataFrame(results, columns=['vx', 'vy', 'r', 'X', 'Y', 'phi'])
+    df['time'] = time_steps
+
+    # --- 結果の可視化 ---
+    plt.figure(figsize=(12, 5))
+
+    # XY軌跡
+    plt.subplot(1, 2, 1)
+    plt.plot(df['X'], df['Y'], label='Trajectory')
+    plt.title('Vehicle Trajectory (Global XY)')
+    plt.xlabel('X [m]')
+    plt.ylabel('Y [m]')
+    plt.axis('equal')
+    plt.grid(True)
+    plt.legend()
+
+    # ヨーレートの時間変化
+    plt.subplot(1, 2, 2)
+    plt.plot(df['time'], df['r'], label='Yaw Rate', color='red')
+    plt.title('Yaw Rate over Time')
+    plt.xlabel('Time [s]')
+    plt.ylabel('Yaw Rate [rad/s]')
+    plt.grid(True)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    print("Simulation finished.")
