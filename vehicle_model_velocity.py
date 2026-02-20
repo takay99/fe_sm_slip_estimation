@@ -1,17 +1,21 @@
 import numpy as np
 import pandas as pd
 from scipy.integrate import odeint
-from vehicle_model import rk4_step
 import matplotlib.pyplot as plt
 from typing import Annotated
 import math
+import runge_kutta 
 
 Vector4 = Annotated[np.ndarray, "4次元ベクトル"]
 Vector6 = Annotated[np.ndarray, "6次元ベクトル"]
+Vector5 = Annotated[np.ndarray, "ステアとトルクの5次元ベクトル"]
 
 
-def sim_vehicle_model_velocity(delta: float, tau: Vector4, x: Vector6, time  ):
+def sim_vehicle_model_velocity( x: Vector6 ,t,input: Vector5):
    
+    delta = input[0]  # ステアリング角度 (ラジアン)
+    tau = np.array(input[1:])  # 各輪のトルク (N*m
+
     m = 1500
     I = 1500
     center2rightwheel = 0.7
@@ -28,7 +32,7 @@ def sim_vehicle_model_velocity(delta: float, tau: Vector4, x: Vector6, time  ):
     velocity_y = x[1,0]  # 車両のy方向速度 (m/s)
     dot_phai = x[2,0]    # ヨーレート (rad/s)
     # x[3], x[4] は X, Y 座標 (m)
-    phi        = x[5]  # ヨー角 (rad)
+    phi = x[5]  # ヨー角 (rad)
 
     slip_angle_fl = delta - (velocity_y + wheelbase_f * dot_phai) / (velocity_x - center2leftwheel * dot_phai)
     slip_angle_fr = delta - (velocity_y + wheelbase_f * dot_phai) / (velocity_x + center2rightwheel * dot_phai)
@@ -70,57 +74,8 @@ def sim_vehicle_model_velocity(delta: float, tau: Vector4, x: Vector6, time  ):
     dphi
     ]).reshape(-1, 1)
 
-    return Fx,Fy, Fs_vector, Ft_vector, slip_angle_vector, x_dot_full
+    return x_dot_full
 
-
-def rk4_step(
-    beta_current, dot_phai_current, delta_input, v_speed, current_time, h_step
-):
-    """
-    4次ルンゲクッタ法を1ステップ実行します。
-
-    引数:
-        beta_current (float): beta の現在の値。
-        dot_phai_current (float): dot_phai の現在の値。
-        delta_input (float): 現在の時刻における操舵入力 (delta)。
-        v_speed (float): 車速。
-        current_time (float): 現在の時刻。
-        h_step (float): 時間ステップ (dt)。
-
-    戻り値:
-        tuple: (beta_next, dot_phai_next) - RK4 ステップ後の値。
-    """
-
-    # sim_vehicle_model から導関数を取得するためのヘルパー関数
-    def f(b, dp, t, delta_val, v_val):
-        db, ddp = sim_vehicle_model_velocity(delta_val, v_val, t, b, dp)
-        return np.array([db, ddp])
-
-    # K1
-    k1 = f(beta_current, dot_phai_current, current_time, delta_input, v_speed)
-
-    # K2
-    beta_k2 = beta_current + 0.5 * h_step * k1[0]
-    dot_phai_k2 = dot_phai_current + 0.5 * h_step * k1[1]
-    k2 = f(beta_k2, dot_phai_k2, current_time + 0.5 * h_step, delta_input, v_speed)
-
-    # K3
-    beta_k3 = beta_current + 0.5 * h_step * k2[0]
-    dot_phai_k3 = dot_phai_current + 0.5 * h_step * k2[1]
-    k3 = f(beta_k3, dot_phai_k3, current_time + 0.5 * h_step, delta_input, v_speed)
-
-    # K4
-    beta_k4 = beta_current + h_step * k3[0]
-    dot_phai_k4 = dot_phai_current + h_step * k3[1]
-    k4 = f(beta_k4, dot_phai_k4, current_time + h_step, delta_input, v_speed)
-
-    # beta と dot_phai を更新
-    beta_next = beta_current + (h_step / 6.0) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0])
-    dot_phai_next = dot_phai_current + (h_step / 6.0) * (
-        k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]
-    )
-
-    return beta_next, dot_phai_next
 
 
 if __name__ == "__main__":
@@ -128,6 +83,8 @@ if __name__ == "__main__":
     delta = 0.1  # ステアリング角度 (ラジアン)
     # tau = np.array([100.0, 100.0, 100.0, 100.0])  # 各輪のトルク (N*m)
     tau = np.array([0.0, 0.0, 0.0, 0.0])  # 各輪のトルク (N*m)
+    input_vector = np.concatenate(([delta], tau))  # 入力ベクトル (ステアリング角度とトルク)
+
 
     velocity_x = 10.0  # 車両のx方向速度 (m/s)
     velocity_y = 0.0   # 車両のy方向速度 (m/s)
@@ -138,17 +95,10 @@ if __name__ == "__main__":
     x = np.array([velocity_x, velocity_y, dot_phai, X, Y, phi]).reshape(-1, 1)  # 状態ベクトル
     time = 0.0         # 時間 (使用されない)
 
-    Fx, Fy, Fs_vector, Ft_vector, slip_angle_vector,x_dot = sim_vehicle_model_velocity(delta, tau, x, time)
+    x_dot = sim_vehicle_model_velocity(x, input_vector)
     
-    print("Fx (車両のx方向力):")
-    print(Fx)
-    print("\nFy (車両のy方向力):")
-    print(Fy)
-    print("\nFs_vector (各輪の横方向力):")
-    print(Fs_vector)
-    print("\nslip_angle_vector (各輪のスリップ角):")
-    print(slip_angle_vector)
-    print("\nFt_vector (各輪の縦方向力):")
-    print(Ft_vector)
+    runge_kutta_result = runge_kutta.rk4_step(sim_vehicle_model_velocity,np.array([0,0,0,0,0,0]).reshape(-1, 1),0,0.01,input_vector )  # sample = np.array([1,2,3,4,5]).reshape(-1, 1)
+
+
     print("\nx_dot (車両の状態変化率):")
     print(x_dot)
