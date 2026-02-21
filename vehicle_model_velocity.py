@@ -32,7 +32,7 @@ def sim_vehicle_model_velocity( x: Vector6 ,t,input: Vector5):
     velocity_y = x[1,0]  # 車両のy方向速度 (m/s)
     dot_phai = x[2,0]    # ヨーレート (rad/s)
     # x[3], x[4] は X, Y 座標 (m)
-    phi = x[5]  # ヨー角 (rad)
+    phi = x[5,0]  # ヨー角 (rad)
 
     slip_angle_fl = delta - (velocity_y + wheelbase_f * dot_phai) / (velocity_x - center2leftwheel * dot_phai)
     slip_angle_fr = delta - (velocity_y + wheelbase_f * dot_phai) / (velocity_x + center2rightwheel * dot_phai)
@@ -79,30 +79,8 @@ def sim_vehicle_model_velocity( x: Vector6 ,t,input: Vector5):
 
 
 if __name__ == "__main__":
-    # Fxのテスト
-    # delta = 0.1  # ステアリング角度 (ラジアン)
-    # # tau = np.array([100.0, 100.0, 100.0, 100.0])  # 各輪のトルク (N*m)
-    # tau = np.array([0.0, 0.0, 0.0, 0.0])  # 各輪のトルク (N*m)
-    # input_vector = np.concatenate(([delta], tau))  # 入力ベクトル (ステアリング角度とトルク)
 
-
-    # velocity_x = 10.0  # 車両のx方向速度 (m/s)
-    # velocity_y = 0.0   # 車両のy方向速度 (m/s)
-    # dot_phai = 0.0     # ヨーレート (rad/s)
-    # X = 0.0            # 車両のX座標 (m)
-    # Y = 0.0            # 車両のY座標 (m)
-    # phi = 0.0          # ヨー角 (rad)
-    # x = np.array([velocity_x, velocity_y, dot_phai, X, Y, phi]).reshape(-1, 1)  # 状態ベクトル
-    # time = 0.0         # 時間 (使用されない)
-
-    # x_dot = sim_vehicle_model_velocity(x,0, input_vector)
-    
-    # runge_kutta_result = runge_kutta.rk4_step(sim_vehicle_model_velocity,np.array([0,0,0,0,0,0]).reshape(-1, 1),0,0.01,input_vector )  # sample = np.array([1,2,3,4,5]).reshape(-1, 1)
-
-
-    # print("\nx_dot (車両の状態変化率):")
-    # print(x_dot)
-    finish_time = 5.0  # 終了時間 (秒)
+    finish_time = 50.0  # 終了時間 (秒)
     dt = 0.01          # 刻み時間 (秒)
     time_steps = np.arange(0, finish_time, dt)
     
@@ -147,6 +125,19 @@ if __name__ == "__main__":
     # 結果のデータフレーム化
     df = pd.DataFrame(results, columns=['vx', 'vy', 'r', 'X', 'Y', 'phi'])
     df['time'] = time_steps
+
+    slipangle = np.arctan2(df['vy'], df['vx'])
+    df['slip_angle'] = slipangle
+
+    plt.figure(figsize=(12, 5))
+    plt.plot(df['time'], df['slip_angle'], label='Slip Angle')
+    plt.grid(True)
+
+    plt.figure(figsize=(12, 5))
+    plt.plot(df['time'], df['vx'], label='Velocity X')
+    plt.plot(df['time'], df['vy'], label='Velocity Y')
+    plt.grid(True)
+    plt.legend()
 
     # --- 結果の可視化 ---
     plt.figure(figsize=(12, 5))
