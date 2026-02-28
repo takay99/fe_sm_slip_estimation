@@ -42,7 +42,8 @@ if __name__ == "__main__":
     str_prev = 0.0
     omega_z_obs_prev = 0.0
     beta_dot_obs_prev = 0.0
-    
+    beta_ddot_obs_prev = 0.0  # ★追加
+
     results = []
     current_x = initial_value
     
@@ -83,6 +84,8 @@ if __name__ == "__main__":
         omega_z_obs= -r_true           # ヨーレートの符号反転
         delta_obs  = -delta_sim        # 操舵角の符号反転
         
+
+
         # ----------------------------------------------------
         # 3. オブザーバによる推定フェーズ (Observer: 右正系)
         # ----------------------------------------------------
@@ -92,18 +95,20 @@ if __name__ == "__main__":
         # (2) ヒューリスティック関数の計算 (簡易版)
         str_dot = (delta_obs - str_prev) / dt
         omega_z_dot = (omega_z_obs - omega_z_obs_prev) / dt
-        beta_dot_obs = BetaEst.get_estimated_slip_angle_dot()
-        beta_ddot_obs = (beta_dot_obs - beta_dot_obs_prev) / dt
         
+        # ★ F_t の計算には「前回ステップ」の beta_dot, beta_ddot を使用する
         F_str = heuristic_schedule_simple(delta_obs, str_dot, 0.1, 0.1)
         F_omegaz = heuristic_schedule_simple(omega_z_obs, omega_z_dot, 0.18, 0.18)
-        F_betadot = heuristic_schedule_simple(beta_dot_obs, beta_ddot_obs, 0.06, 0.3)
+        F_betadot = heuristic_schedule_simple(beta_dot_obs_prev, beta_ddot_obs_prev, 0.06, 0.3)
         F_t = F_str * F_omegaz * F_betadot
         
-        # (3) 状態オブザーバの更新
+        # (3) 状態オブザーバの更新 (ここで self.dV_hat_dt が初めて計算される)
         beta_hat_obs_rad = BetaEst.update_state(ax_obs, ay_obs, omega_z_obs, vx_est, F_t=F_t)
         vx_hat, vy_hat_obs = BetaEst.get_estimated_velocity()
-        
+
+        # ★ 次回ステップのために、更新後の状態から beta_dot と beta_ddot を計算・取得
+        beta_dot_obs = BetaEst.get_estimated_slip_angle_dot()
+        beta_ddot_obs = (beta_dot_obs - beta_dot_obs_prev) / dt
         # ----------------------------------------------------
         # 4. 座標系の逆変換 (Observer[右正] -> Simulator[左正])
         # ----------------------------------------------------
