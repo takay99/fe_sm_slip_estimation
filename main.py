@@ -10,7 +10,7 @@ def main():
     print("Hello from fe-sm-data-analize!")
 
     output_data = pd.read_csv(
-        "LOG00295.txt",
+        "LOG00297.txt",
         header=None,
         delim_whitespace=False,
         # 古い引数の代わりに新しい引数を使う
@@ -26,8 +26,17 @@ def main():
     # 他のデータ列に NaN が残ってもプロットは可能ですが、時間軸は連続している必要があるため
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
-    figure, axe = all_plot_bool.all_plot_bool(output_data)
+    output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
+    output_data.iloc[:,1] = lowpassfilter.lowpass_filter(output_data.iloc[:,1], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,2] = -lowpassfilter.lowpass_filter(output_data.iloc[:,2], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,3] = -output_data.iloc[:,3]
+    output_data.iloc[:,4] = lowpassfilter.lowpass_filter(output_data.iloc[:,4], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,5] = -lowpassfilter.lowpass_filter(output_data.iloc[:,5], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,6] = -output_data.iloc[:,6]
+    output_data.iloc[:,7] = lowpassfilter.lowpass_filter(output_data.iloc[:,7], cutoff_freq=1, T=0.01)
+    output_data.iloc[:,8] = lowpassfilter.lowpass_filter(output_data.iloc[:,8], cutoff_freq=1, T=0.01)
 
+    figure, axe = all_plot_bool.all_plot_bool(output_data)
     print("end")
 
 
