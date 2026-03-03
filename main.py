@@ -10,7 +10,7 @@ def main():
     print("Hello from fe-sm-data-analize!")
 
     output_data = pd.read_csv(
-        "LOG00289.txt",
+        "LOG00295.txt",
         header=None,
         delim_whitespace=False,
         # 古い引数の代わりに新しい引数を使う

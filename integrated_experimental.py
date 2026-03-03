@@ -18,31 +18,38 @@ def heuristic_schedule_simple(val, val_dot, sigma, sigma_dot):
     return f_val * f_dot
 
 if __name__ == "__main__":
-    finish_time = 10.0  # 終了時間 (秒)
-    dt = 0.01          # 刻み時間 (秒)
-    time_steps = np.arange(0, finish_time, dt)
+    # finish_time = 10.0  # 終了時間 (秒)
+    # dt = 0.01          # 刻み時間 (秒)
+    # time_steps = np.arange(0, finish_time, dt)
     
-    # 初期値の設定 [vx, vy, r, X, Y, phi]
-    # 初期速度 10m/s (36km/h) で直進状態から開始
-    initial_value = np.array([10.0, 0.0, 0.0, 0.0, 0.0, 0.0]).reshape(-1, 1)
+    # # 初期値の設定 [vx, vy, r, X, Y, phi]
+    # # 初期速度 10m/s (36km/h) で直進状態から開始
+    # initial_value = np.array([10.0, 0.0, 0.0, 0.0, 0.0, 0.0]).reshape(-1, 1)
     
-    # 時系列入力データの作成 (1秒後にステアリングを0.1rad切る)
-    inputs = []
-    for t in time_steps:
-        delta = 0.1 * math.sin(0.5 * math.pi * (t - 1.0)) if t >= 1.0 else 0.0
-        tau = np.zeros(4) # トルクは0でコースト走行
-        inputs.append(np.concatenate(([delta], tau)))
-    
+    # # 時系列入力データの作成 (1秒後にステアリングを0.1rad切る)
+    # inputs = []
+    # for t in time_steps:
+    #     delta = 0.1 * math.sin(0.5 * math.pi * (t - 1.0)) if t >= 1.0 else 0.0
+    #     tau = np.zeros(4) # トルクは0でコースト走行
+    #     inputs.append(np.concatenate(([delta], tau)))
+
+    output_data = pd.read_csv(
+    "LOG00295.txt",
+    header=None,
+    delim_whitespace=False,
+    # 古い引数の代わりに新しい引数を使う
+    on_bad_lines="skip",
+    )
+    print(output_data)
+
+    dt = 0.01
+    time_steps = output_data.iloc[:,0].values
+
     # --- 推定器(Observer)の初期化 ---
     # Observer側のトレッドは 0.7 + 0.7 = 1.4m
     VelEst = VelocityEstimator(s_time=dt, s1=4.5, s2=1.0, track=1.4, ax_threshold=1.0)
     BetaEst = VehicleStateObserver(a0=10, a1=5, a2=10, dt=dt)
-    
-    # 微分計算用の前回値保持
-    str_prev = 0.0
-    omega_z_obs_prev = 0.0
-    beta_dot_obs_prev = 0.0
-    beta_ddot_obs_prev = 0.0  # ★追加
+
 
     results = []
     current_x = initial_value
@@ -50,39 +57,39 @@ if __name__ == "__main__":
     print(f"Starting integrated simulation: 0.0s to {finish_time}s...")
     
     for i, t in enumerate(time_steps):
-        u = inputs[i]
-        delta_sim = u[0]
+        # u = inputs[i]
+        # delta_sim = u[0]
         
-        # ----------------------------------------------------
-        # 1. シミュレータによる真の微分値・状態量の計算 (Simulator: 左正系)
-        # ----------------------------------------------------
-        x_dot = sim_vehicle_model_velocity(current_x, t, u)
-        dvx_true = x_dot[0, 0]
-        dvy_true = x_dot[1, 0]
+        # # ----------------------------------------------------
+        # # 1. シミュレータによる真の微分値・状態量の計算 (Simulator: 左正系)
+        # # ----------------------------------------------------
+        # x_dot = sim_vehicle_model_velocity(current_x, t, u)
+        # dvx_true = x_dot[0, 0]
+        # dvy_true = x_dot[1, 0]
         
-        vx_true = current_x[0, 0]
-        vy_true = current_x[1, 0]
-        r_true  = current_x[2, 0]
-        beta_true = math.atan2(vy_true, vx_true)
+        # vx_true = current_x[0, 0]
+        # vy_true = current_x[1, 0]
+        # r_true  = current_x[2, 0]
+        # beta_true = math.atan2(vy_true, vx_true)
         
-        # センサ観測値の疑似合成 (遠心力を加味したIMUの加速度)
-        ax_sim_meas = dvx_true - vy_true * r_true
-        ay_sim_meas = dvy_true + vx_true * r_true
+        # # センサ観測値の疑似合成 (遠心力を加味したIMUの加速度)
+        # ax_sim_meas = dvx_true - vy_true * r_true
+        # ay_sim_meas = dvy_true + vx_true * r_true
         
-        # 車輪速度センサの疑似合成 (左正系での計算)
-        v_fl = (vx_true - 0.7 * r_true) / math.cos(delta_sim) if math.cos(delta_sim) != 0 else vx_true
-        v_fr = (vx_true + 0.7 * r_true) / math.cos(delta_sim) if math.cos(delta_sim) != 0 else vx_true
-        v_rl = vx_true - 0.7 * r_true
-        v_rr = vx_true + 0.7 * r_true
-        v_meas = (v_fl, v_fr, v_rl, v_rr)
+        # # 車輪速度センサの疑似合成 (左正系での計算)
+        # v_fl = (vx_true - 0.7 * r_true) / math.cos(delta_sim) if math.cos(delta_sim) != 0 else vx_true
+        # v_fr = (vx_true + 0.7 * r_true) / math.cos(delta_sim) if math.cos(delta_sim) != 0 else vx_true
+        # v_rl = vx_true - 0.7 * r_true
+        # v_rr = vx_true + 0.7 * r_true
+        # v_meas = (v_fl, v_fr, v_rl, v_rr)
         
-        # ----------------------------------------------------
-        # 2. 座標系の変換 (Simulator[左正] -> Observer[右正])
-        # ----------------------------------------------------
-        ax_obs     = ax_sim_meas
-        ay_obs     = -ay_sim_meas      # 横方向の符号反転
-        omega_z_obs= -r_true           # ヨーレートの符号反転
-        delta_obs  = -delta_sim        # 操舵角の符号反転
+        # # ----------------------------------------------------
+        # # 2. 座標系の変換 (Simulator[左正] -> Observer[右正])
+        # # ----------------------------------------------------
+        # ax_obs     = ax_sim_meas
+        # ay_obs     = -ay_sim_meas      # 横方向の符号反転
+        # omega_z_obs= -r_true           # ヨーレートの符号反転
+        # delta_obs  = -delta_sim        # 操舵角の符号反転
         
 
 

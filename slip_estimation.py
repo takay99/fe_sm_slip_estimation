@@ -13,7 +13,7 @@ if __name__ == "__main__":
     print("Hello from fe-sm-data-analize!")
 
     output_data = pd.read_csv(
-        "sim.txt",
+        "LOG00295.txt",
         header=None,
         delim_whitespace=False,
         # 古い引数の代わりに新しい引数を使う
