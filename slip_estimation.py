@@ -13,7 +13,7 @@ if __name__ == "__main__":
     print("Hello from fe-sm-data-analize!")
 
     output_data = pd.read_csv(
-        "LOG00295.txt",
+        "LOG00297.txt",
         header=None,
         delim_whitespace=False,
         # 古い引数の代わりに新しい引数を使う
@@ -28,6 +28,12 @@ if __name__ == "__main__":
     # 時間軸（最初の列）に NaN がある行を削除する
     # 他のデータ列に NaN が残ってもプロットは可能ですが、時間軸は連続している必要があるため
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
+
+    output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
+    output_data.iloc[:,2] = -output_data.iloc[:,2]
+    output_data.iloc[:,3] = -output_data.iloc[:,3]
+    output_data.iloc[:,5] = -output_data.iloc[:,5]
+    output_data.iloc[:,6] = -output_data.iloc[:,6]
 
     output_data.iloc[:,9] = lowpassfilter.lowpass_filter(output_data.iloc[:,9], cutoff_freq=2, T=0.01)
     output_data.iloc[:,10] = lowpassfilter.lowpass_filter(output_data.iloc[:,10], cutoff_freq=2.0, T=0.01)
@@ -67,15 +73,16 @@ if __name__ == "__main__":
         str = float(output_data.iloc[i,11])
         str_dot = StrDotFilter.filter(float(output_data.iloc[i,11]-output_data.iloc[i-1,11])/(time-time_prev))
 
-        omega_z = float(output_data.iloc[i,3]+output_data.iloc[i,6])/2.0
-        omega_z_dot = OmegaZDotFilter.filter(float((output_data.iloc[i,3]+output_data.iloc[i,6])-(output_data.iloc[i-1,3]+output_data.iloc[i-1,6]))/(time-time_prev)/2.0)
+        omega_z = float(output_data.iloc[i,3])
+        omega_z_dot = OmegaZDotFilter.filter(float((output_data.iloc[i,3])-(output_data.iloc[i-1,3]))/(time-time_prev))
 
         beta_dot =  float(beta_dot)
         beta_ddot = BetaDotFilter.filter(float((beta_dot - beta_dot_prev)/(time - time_prev)))
 
-        Ax_raw = float(output_data.iloc[i,2]+output_data.iloc[i,5])/2.0
-        Ay_raw = float(output_data.iloc[i,1]+output_data.iloc[i,4])/2.0
-        omega_z_raw = float(output_data.iloc[i,3]+output_data.iloc[i,6])/2.0
+        # Ax_raw = float(output_data.iloc[i,2]+output_data.iloc[i,5])/2.0
+        Ax_raw = float(output_data.iloc[i,2])
+        Ay_raw = float(output_data.iloc[i,1])
+        omega_z_raw = float(output_data.iloc[i,3])
         ################
 
         #######velocity estimation#######

@@ -33,8 +33,8 @@ def main():
     output_data.iloc[:,4] = lowpassfilter.lowpass_filter(output_data.iloc[:,4], cutoff_freq=5, T=0.01)
     output_data.iloc[:,5] = -lowpassfilter.lowpass_filter(output_data.iloc[:,5], cutoff_freq=5, T=0.01)
     output_data.iloc[:,6] = -output_data.iloc[:,6]
-    output_data.iloc[:,7] = lowpassfilter.lowpass_filter(output_data.iloc[:,7], cutoff_freq=1, T=0.01)
-    output_data.iloc[:,8] = lowpassfilter.lowpass_filter(output_data.iloc[:,8], cutoff_freq=1, T=0.01)
+    output_data.iloc[:,7] = -lowpassfilter.lowpass_filter(output_data.iloc[:,7], cutoff_freq=1, T=0.01)
+    output_data.iloc[:,8] = -lowpassfilter.lowpass_filter(output_data.iloc[:,8], cutoff_freq=1, T=0.01)
 
     figure, axe = all_plot_bool.all_plot_bool(output_data)
     print("end")
