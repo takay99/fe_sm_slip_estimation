@@ -27,11 +27,11 @@ def main():
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
     output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
-    output_data.iloc[:,1] = lowpassfilter.lowpass_filter(output_data.iloc[:,1], cutoff_freq=5, T=0.01)
-    output_data.iloc[:,2] = -lowpassfilter.lowpass_filter(output_data.iloc[:,2], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,1] = -lowpassfilter.lowpass_filter(output_data.iloc[:,1], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,2] = -lowpassfilter.lowpass_filter(output_data.iloc[:,2]-0.15, cutoff_freq=5, T=0.01)
     output_data.iloc[:,3] = -output_data.iloc[:,3]
-    output_data.iloc[:,4] = lowpassfilter.lowpass_filter(output_data.iloc[:,4], cutoff_freq=5, T=0.01)
-    output_data.iloc[:,5] = -lowpassfilter.lowpass_filter(output_data.iloc[:,5], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,4] = -lowpassfilter.lowpass_filter(output_data.iloc[:,4], cutoff_freq=5, T=0.01)
+    output_data.iloc[:,5] = -lowpassfilter.lowpass_filter(output_data.iloc[:,5]-0.15, cutoff_freq=5, T=0.01)
     output_data.iloc[:,6] = -output_data.iloc[:,6]
     output_data.iloc[:,7] = -lowpassfilter.lowpass_filter(output_data.iloc[:,7], cutoff_freq=1, T=0.01)
     output_data.iloc[:,8] = -lowpassfilter.lowpass_filter(output_data.iloc[:,8], cutoff_freq=1, T=0.01)

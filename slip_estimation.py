@@ -30,8 +30,10 @@ if __name__ == "__main__":
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
 
     output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
+    output_data.iloc[:,1] = -output_data.iloc[:,1]
     output_data.iloc[:,2] = -output_data.iloc[:,2]
     output_data.iloc[:,3] = -output_data.iloc[:,3]
+    output_data.iloc[:,4] = -output_data.iloc[:,4] 
     output_data.iloc[:,5] = -output_data.iloc[:,5]
     output_data.iloc[:,6] = -output_data.iloc[:,6]
 
@@ -105,7 +107,9 @@ if __name__ == "__main__":
         ###########################
 
         ###########################
-        beta_hat_deg = BetaEst.update_state(Ay_offset, Ax_offset,  omega_z_offset,   V_est,  F_t=F)
+        # beta_hat_deg = BetaEst.update_state(Ay_offset, Ax_offset,  omega_z_offset,   V_est,  F_t=F)
+        # 修正後のコード
+        beta_hat_deg = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
         beta_hat_storage[i] = beta_hat_deg
         beta_dot = BetaEst.get_estimated_slip_angle_dot()
         V_hat[i] = BetaEst.get_estimated_velocity()
