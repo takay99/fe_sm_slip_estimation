@@ -28,6 +28,8 @@ if __name__ == "__main__":
     # 時間軸（最初の列）に NaN がある行を削除する
     # 他のデータ列に NaN が残ってもプロットは可能ですが、時間軸は連続している必要があるため
     output_data = output_data.dropna(subset=[0]).reset_index(drop=True)
+    # 【追加】他の列に紛れ込んでいる NaN を前後の値で線形補間し、それでも残る場合は0で埋める
+    output_data = output_data.interpolate(method='linear', limit_direction='both').fillna(0.0)
 
     output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
     output_data.iloc[:,1] = -output_data.iloc[:,1]
@@ -86,8 +88,10 @@ if __name__ == "__main__":
         Ax_raw = float(output_data.iloc[i,2])
         # Ay_raw = float(output_data.iloc[i,4] + output_data.iloc[i,1])/2.0
         Ay_raw = float(output_data.iloc[i,1])
-        # print("[i,5]", output_data.iloc[i,5], "[i,2]", output_data.iloc[i,2])
-        # print("[i,4]", output_data.iloc[i,4], "[i,1]", output_data.iloc[i,1])
+
+        if i < 10:
+            print("[i,5]", output_data.iloc[i,5], "[i,2]", output_data.iloc[i,2])
+            print("[i,4]", output_data.iloc[i,4], "[i,1]", output_data.iloc[i,1])
         omega_z_raw = float(output_data.iloc[i,3])
         ################
 
@@ -117,7 +121,8 @@ if __name__ == "__main__":
         beta_hat_storage[i] = beta_hat_deg
         beta_dot = BetaEst.get_estimated_slip_angle_dot()
         V_hat[i] = BetaEst.get_estimated_velocity()
-        print("V_hat:", V_hat[i])
+        if i < 10:
+           print("V_hat:", V_hat[i])
         V_est_array[i] = V_est
         # print("Estimated Slip Angle: {:.4f} deg".format(beta_hat_deg))
         ###########################
@@ -154,6 +159,13 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
+    # 【確認用】後輪センサと前輪センサの波形が一致しているかプロット
+    plt.figure(figsize=(10, 4))
+    plt.plot(output_data.iloc[:, 2], label="Rear Lateral (Col 1)", alpha=0.7)
+    plt.plot(output_data.iloc[:, 5], label="Front Lateral? (Col 4)", alpha=0.7)
+    plt.title("Sensor Consistency Check")
+    plt.legend()
+    plt.show()
         # print(f"steer: {str}, steer_dot: {str_dot}")
 
     
