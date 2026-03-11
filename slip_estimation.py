@@ -82,14 +82,18 @@ if __name__ == "__main__":
         beta_ddot = BetaDotFilter.filter(float((beta_dot - beta_dot_prev)/(time - time_prev)))
 
         # Ax_raw = float(output_data.iloc[i,2]+output_data.iloc[i,5])/2.0
+        # Ax_raw = float(output_data.iloc[i,5] + output_data.iloc[i,2])/2.0
         Ax_raw = float(output_data.iloc[i,2])
+        # Ay_raw = float(output_data.iloc[i,4] + output_data.iloc[i,1])/2.0
         Ay_raw = float(output_data.iloc[i,1])
+        # print("[i,5]", output_data.iloc[i,5], "[i,2]", output_data.iloc[i,2])
+        # print("[i,4]", output_data.iloc[i,4], "[i,1]", output_data.iloc[i,1])
         omega_z_raw = float(output_data.iloc[i,3])
         ################
 
         #######velocity estimation#######
         V_meas = (float(-output_data.iloc[i,9]),float(-output_data.iloc[i,9]),float(output_data.iloc[i,10]),float(output_data.iloc[i,10]))
-        print("V_meas:", V_meas)
+        # print("V_meas:", V_meas)
         V_est = VelEst.estimate(V_meas,str,omega_z_offset, Ax_offset)
 
         #######offset#######
@@ -113,6 +117,7 @@ if __name__ == "__main__":
         beta_hat_storage[i] = beta_hat_deg
         beta_dot = BetaEst.get_estimated_slip_angle_dot()
         V_hat[i] = BetaEst.get_estimated_velocity()
+        print("V_hat:", V_hat[i])
         V_est_array[i] = V_est
         # print("Estimated Slip Angle: {:.4f} deg".format(beta_hat_deg))
         ###########################

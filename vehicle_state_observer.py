@@ -157,7 +157,8 @@ class VehicleStateObserver:
 
         # 離散化 (オイラー法): V_hat(t+dt) = V_hat(t) + dV_hat/dt * dt
         self.V_hat = self.V_hat + self.dV_hat_dt * self.dt
-
+        self.Ay = Ay
+        self.omega_z = omega_z
         # Vx_hatが負にならないように最小値を設定
         # self.V_hat[0] = max(self.V_hat[0], 0.01) 
 
@@ -173,7 +174,8 @@ class VehicleStateObserver:
 
     def get_estimated_slip_angle_dot(self):
         """推定された横滑り角速度を返します。"""
-        beta_hat_dot = np.arctan2(self.dV_hat_dt[0], -self.dV_hat_dt[1])
+        # beta_hat_dot = np.arctan2(self.dV_hat_dt[0], -self.dV_hat_dt[1])
+        beta_hat_dot = (self.Ay - self.omega_z * self.V_hat[0]) / self.V_hat[0]
         return beta_hat_dot
 # ----------------------------------------------------
 # 使用例（簡易的なシミュレーション）
