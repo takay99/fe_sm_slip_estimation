@@ -56,6 +56,7 @@ def all_plot_bool(output_data):
         ln.figure.canvas.draw_idle()
 
     check.on_clicked(callback)
+    plt.grid(True)
     plt.show()
 
     return fig, ax

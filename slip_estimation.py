@@ -33,12 +33,11 @@ if __name__ == "__main__":
 
     output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
     output_data.iloc[:,1] = -output_data.iloc[:,1]
-    output_data.iloc[:,2] = -output_data.iloc[:,2]
+    output_data.iloc[:,2] = -output_data.iloc[:,2] + 0.2
     output_data.iloc[:,3] = -output_data.iloc[:,3]
     output_data.iloc[:,4] = -output_data.iloc[:,4] 
-    output_data.iloc[:,5] = -output_data.iloc[:,5]
-    output_data.iloc[:,6] = -output_data.iloc[:,6]
-
+    output_data.iloc[:,5] = -output_data.iloc[:,5] + 0.15
+    output_data.iloc[:,6] = -output_data.iloc[:,6] 
     output_data.iloc[:,9] = lowpassfilter.lowpass_filter(output_data.iloc[:,9], cutoff_freq=2, T=0.01)
     output_data.iloc[:,10] = lowpassfilter.lowpass_filter(output_data.iloc[:,10], cutoff_freq=2.0, T=0.01)
     beta_dot = float(0.0)
@@ -66,6 +65,7 @@ if __name__ == "__main__":
     beta_hat_storage = np.zeros(len(output_data))
     V_hat = np.zeros((len(output_data),2))  
     V_est_array = np.zeros((len(output_data)))
+    F_array = np.zeros((len(output_data)))
 
     for i in range(1, len(output_data.iloc[:,0])):
         # print(f"i: {output_data.iloc[i,0]}")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         if i < 10:
             print("[i,5]", output_data.iloc[i,5], "[i,2]", output_data.iloc[i,2])
             print("[i,4]", output_data.iloc[i,4], "[i,1]", output_data.iloc[i,1])
-        omega_z_raw = float(output_data.iloc[i,3])
+        omega_z_raw = float(output_data.iloc[i,6])
         ################
 
         #######velocity estimation#######
@@ -112,6 +112,7 @@ if __name__ == "__main__":
         F_omegaz = heuristic_schedule.heuristic_schedule(omega_z, omega_z_dot, 0.18, 0.18 )
         F_betadot = heuristic_schedule.heuristic_schedule(beta_dot, beta_ddot, 0.06, 0.3 )
         F = F_str * F_omegaz * F_betadot
+        F_array[i] = F
         ###########################
 
         ###########################
@@ -156,6 +157,15 @@ if __name__ == "__main__":
     plt.xlabel('Time (s)')
     plt.ylabel('Value')
     plt.title('Data Plot')
+    plt.legend()
+    plt.show()
+
+    plt.figure(figsize=(10, 4))
+    plt.plot(output_data.iloc[:,0]/1000.0, F_array, label='F', color='magenta')
+    plt.grid(True)
+    plt.xlabel('Time (s)')
+    plt.ylabel('F')
+    plt.title('Heuristic F over Time')
     plt.legend()
     plt.show()
 
