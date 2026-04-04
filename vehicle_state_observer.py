@@ -166,7 +166,7 @@ class VehicleStateObserver:
         beta_hat_rad = np.arctan2(self.V_hat[1], self.V_hat[0])
         self.beta_hat_deg = (beta_hat_rad)
 
-        return self.beta_hat_deg
+        return self.beta_hat_deg, self.dV_hat_dt
 
     def get_estimated_velocity(self):
         """推定された縦速度と横速度を返します。"""

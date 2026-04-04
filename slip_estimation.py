@@ -63,6 +63,7 @@ if __name__ == "__main__":
     
     BetaEst = vehicle_state_observer.VehicleStateObserver(10,5,10,0.01)
     beta_hat_storage = np.zeros(len(output_data))
+    test_dV_hat_storage = np.zeros((len(output_data), 2))
     V_hat = np.zeros((len(output_data),2))  
     V_est_array = np.zeros((len(output_data)))
     F_array = np.zeros((len(output_data)))
@@ -118,8 +119,10 @@ if __name__ == "__main__":
         ###########################
         # beta_hat_deg = BetaEst.update_state(Ay_offset, Ax_offset,  omega_z_offset,   V_est,  F_t=F)
         # 修正後のコード
-        beta_hat_deg = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
+        beta_hat_deg, test_dV_dat = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
         beta_hat_storage[i] = beta_hat_deg
+        test_dV_hat_storage[i,0:2] = test_dV_dat.T
+        print("dV_hat:", test_dV_dat)
         beta_dot = BetaEst.get_estimated_slip_angle_dot()
         V_hat[i] = BetaEst.get_estimated_velocity()
         if i < 10:
@@ -128,8 +131,7 @@ if __name__ == "__main__":
         # print("Estimated Slip Angle: {:.4f} deg".format(beta_hat_deg))
         ###########################
 
-        #######
-
+        ###########################
         V_prev = V_est
         # print(f"V_est: {V_est}, Ax_offset: {Ax_offset}, Ay_offset: {Ay_offset}, omega_z_offset: {omega_z_offset}, F: {F} ")
         # 
@@ -139,26 +141,29 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 6))
 
     # 最初のプロット: poly_acc_1
-    # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 1], label='acc x r') # output_data(:,3)
-    # # 後続のプロット
-    # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 2], label='acc y r') # output_data(:,3)
-    # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 3], label='gyr z r') # output_data(:,4)
+    plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 1], label='acc x r') # output_data(:,3)
+    # 後続のプロット
+    plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 2], label='acc y r') # output_data(:,3)
+    plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 3], label='gyr z r') # output_data(:,4)
     # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 4], label='acc x f') # output_data(:,3)
     # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 5], label='acc y f') # output_data(:,6)
     # plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:, 6], label='gyr z r') # output_data(:,7)
     # plt.plot(output_data.iloc[:,0]/1000.0, np.rad2deg(beta_hat_storage[:]), label='estimated slip angle') # output_data(:,7)
-    plt.plot(output_data.iloc[:,0]/1000.0, V_hat[:,0], label='V_x') 
-    plt.plot(output_data.iloc[:,0]/1000.0, V_hat[:,1], label='V_y')
+    # plt.plot(output_data.iloc[:,0]/1000.0, V_hat[:,0], label='V_x') 
+    # plt.plot(output_data.iloc[:,0]/1000.0, V_hat[:,1], label='V_y')
+    plt.plot(output_data.iloc[:,0]/1000.0, test_dV_hat_storage[:,0], label='d_Vx/dt') 
+    plt.plot(output_data.iloc[:,0]/1000.0, test_dV_hat_storage[:,1], label='d_Vy/dt')
+    # output_data(:,7)
     plt.plot(output_data.iloc[:,0]/1000.0, V_est_array[:], label='estimated V')
     plt.plot(output_data.iloc[:,0]/1000.0, (-output_data.iloc[:,9]), label='wheel speed f')
-
-        # グリッドの表示
+    # グリッドの表示
     plt.grid(True)
     plt.xlabel('Time (s)')
     plt.ylabel('Value')
     plt.title('Data Plot')
     plt.legend()
     plt.show()
+
 
     plt.figure(figsize=(10, 4))
     plt.plot(output_data.iloc[:,0]/1000.0, F_array, label='F', color='magenta')
