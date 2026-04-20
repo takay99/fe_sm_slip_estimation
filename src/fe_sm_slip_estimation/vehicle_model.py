@@ -26,25 +26,6 @@ def sim_vehicle_model(delta, v, time, beta, dot_phai):
 
     return dot_beta, ddot_phai
 
-
-# #########
-v = 10  # m/s
-t_finish = 5
-dt = 0.001  # シミュレーションの時間ステップ
-
-# 初期条件
-beta = 0.0
-dot_phai = 0.0
-
-# 時間点のリストを作成
-steps = int(t_finish / dt)
-t_list = np.linspace(0, t_finish, steps)
-
-# 結果を保存するリスト
-beta_list = []
-dot_phai_list = []
-
-
 def rk4_step(
     beta_current, dot_phai_current, delta_input, v_speed, current_time, h_step
 ):
@@ -95,74 +76,96 @@ def rk4_step(
     return beta_next, dot_phai_next
 
 
-# シミュレーションループ
-for i, t in enumerate(t_list):
-    # 操舵入力の例 (変更可能)
-    delta = 0.2 * np.sin(1 * np.pi * 2 * t)
-    # delta = 0.2
 
-    # 次のステップのために更新する前に現在の値を保存
-    beta_list.append(beta)
-    dot_phai_list.append(dot_phai)
+if __name__ == "__main__":
 
-    # RK4 を使って次のステップを計算
-    beta, dot_phai = rk4_step(beta, dot_phai, delta, v, t, dt)
+    # #########
+    v = 10  # m/s
+    t_finish = 5
+    dt = 0.001  # シミュレーションの時間ステップ
 
-# 結果を Pandas DataFrame に保存
-df = pd.DataFrame({"time": t_list, "beta": beta_list, "dot_phai": dot_phai_list})
+    # 初期条件
+    beta = 0.0
+    dot_phai = 0.0
 
-# 結果の最初の数行を表示
-print(df.head())
+    # 時間点のリストを作成
+    steps = int(t_finish / dt)
+    t_list = np.linspace(0, t_finish, steps)
 
-# 必要に応じて結果を CSV ファイルに保存することもできます
-# df.to_csv('vehicle_sim_result.csv', index=False)
-# ans = sim_vehicle_model(1,1,1,1,1)
-# print(ans)
+    # 結果を保存するリスト
+    beta_list = []
+    dot_phai_list = []
 
-# Integrate dot_phai to get phai (yaw angle)
-df["phai"] = df["dot_phai"].cumsum() * dt
+    # シミュレーションループ
+    for i, t in enumerate(t_list):
+        # 操舵入力の例 (変更可能)
+        delta = 0.2 * np.sin(1 * np.pi * 2 * t)
+        # delta = 0.2
 
-# Initial position
-x = 0.0
-y = 0.0
+        # 次のステップのために更新する前に現在の値を保存
+        beta_list.append(beta)
+        dot_phai_list.append(dot_phai)
 
-# Lists to store position data
-x_list = [x]
-y_list = [y]
-current_phai_list = [x]
-current_beta_list = [x]
-# Calculate x and y coordinates
-for i in range(1, len(df)):
-    current_phai = df["phai"].iloc[i - 1]
-    current_beta = df["beta"].iloc[i - 1]
+        # RK4 を使って次のステップを計算
+        beta, dot_phai = rk4_step(beta, dot_phai, delta, v, t, dt)
 
-    current_phai_list.append(current_phai)
-    current_beta_list.append(current_beta)
+    # 結果を Pandas DataFrame に保存
+    df = pd.DataFrame({"time": t_list, "beta": beta_list, "dot_phai": dot_phai_list})
 
-    # Kinematic equations for vehicle position
-    # Assuming constant velocity 'v' for simplicity, as it was given as a constant 'v=17'
-    dot_x = v * np.cos(current_phai + current_beta)
-    dot_y = v * np.sin(current_phai + current_beta)
+    # 結果の最初の数行を表示
+    print(df.head())
 
-    x += dot_x * dt
-    y += dot_y * dt
+    # 必要に応じて結果を CSV ファイルに保存することもできます
+    # df.to_csv('vehicle_sim_result.csv', index=False)
+    # ans = sim_vehicle_model(1,1,1,1,1)
+    # print(ans)
 
-    x_list.append(x)
-    y_list.append(y)
+    # Integrate dot_phai to get phai (yaw angle)
+    df["phai"] = df["dot_phai"].cumsum() * dt
 
-df["x"] = x_list
-df["y"] = y_list
-df["current_phai"] = current_phai_list
-df["current_beta"] = current_beta_list
-# Plotting the trajectory
+    # Initial position
+    x = 0.0
+    y = 0.0
+
+    # Lists to store position data
+    x_list = [x]
+    y_list = [y]
+    current_phai_list = [x]
+    current_beta_list = [x]
+    # Calculate x and y coordinates
+    for i in range(1, len(df)):
+        current_phai = df["phai"].iloc[i - 1]
+        current_beta = df["beta"].iloc[i - 1]
+
+        current_phai_list.append(current_phai)
+        current_beta_list.append(current_beta)
+
+        # Kinematic equations for vehicle position
+        # Assuming constant velocity 'v' for simplicity, as it was given as a constant 'v=17'
+        dot_x = v * np.cos(current_phai + current_beta)
+        dot_y = v * np.sin(current_phai + current_beta)
+
+        x += dot_x * dt
+        y += dot_y * dt
+
+        x_list.append(x)
+        y_list.append(y)
+
+    df["x"] = x_list
+    df["y"] = y_list
+    df["current_phai"] = current_phai_list
+    df["current_beta"] = current_beta_list
+    # Plotting the trajectory
 
 
-plt.figure(figsize=(10, 8))
-plt.plot(df["x"], df["y"], label="車両の軌道")
-plt.xlabel("X (m)")
-plt.ylabel("Y (m)")
-plt.title("車両の軌道シミュレーション")
-plt.grid(True)
-plt.axis("equal")  # Equal scaling for x and y axes
-plt.legend()
-plt.show()
+    plt.figure(figsize=(10, 8))
+    plt.plot(df["x"], df["y"], label="車両の軌道")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.title("車両の軌道シミュレーション")
+    plt.grid(True)
+    plt.axis("equal")  # Equal scaling for x and y axes
+    plt.legend()
+    plt.show()
+
+    print(df[["time", "beta", "dot_phai", "phai", "x", "y"]].head())
