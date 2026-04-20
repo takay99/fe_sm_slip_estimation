@@ -138,7 +138,22 @@ class VehicleStateObserver:
 
         dV_hat_dt = dV_hat_dt_M + dV_hat_dt_B + K_Vx
 
-        return dV_hat_dt
+
+        ############## デバッグ用のテスト出力（dV_hat_dtの各項を個別に確認できるようにする） ##############
+        dV_hat_test = np.zeros(4)  # デバッグ用のテスト出力    
+        # dV_hat_test[0] =  M_11 * Vx_hat
+        # dV_hat_test[1] =  M_12 * Vy_hat
+        # dV_hat_test[2] = dV_hat_dt_B[0]
+        # dV_hat_test[3] = K_Vx[0]
+
+        dV_hat_test[0] =  M_21 * Vx_hat
+        dV_hat_test[1] =  M_22 * Vy_hat
+        dV_hat_test[2] = dV_hat_dt_B[1]
+        dV_hat_test[3] = K_Vx[1]
+
+        ###############################################################################################
+
+        return dV_hat_dt , dV_hat_test
 
     def update_state(self, Ax, Ay, omega_z, Vx_meas, F_t):
         """
@@ -153,7 +168,7 @@ class VehicleStateObserver:
         :return: 更新された横滑り角 (beta_hat_deg)
         """
 
-        self.dV_hat_dt = self.calculate_dV_hat_dt(Ax, Ay, omega_z, Vx_meas, F_t)
+        self.dV_hat_dt, self.dV_hat_test = self.calculate_dV_hat_dt(Ax, Ay, omega_z, Vx_meas, F_t)
 
         # 離散化 (オイラー法): V_hat(t+dt) = V_hat(t) + dV_hat/dt * dt
         self.V_hat = self.V_hat + self.dV_hat_dt * self.dt
@@ -166,7 +181,7 @@ class VehicleStateObserver:
         beta_hat_rad = np.arctan2(self.V_hat[1], self.V_hat[0])
         self.beta_hat_deg = (beta_hat_rad)
 
-        return self.beta_hat_deg, self.dV_hat_dt
+        return self.beta_hat_deg, self.dV_hat_test
 
     def get_estimated_velocity(self):
         """推定された縦速度と横速度を返します。"""
