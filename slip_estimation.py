@@ -1,12 +1,12 @@
-import lowpassfilter_onestep as lpfs
-import longitudinal_speed_estimation_class as lse
-import offset 
-import vehicle_state_observer
-import heuristic_schedule
+import fe_sm_slip_estimation.lowpassfilter_onestep as lpfs
+import fe_sm_slip_estimation.longitudinal_speed_estimation_class as lse
+import fe_sm_slip_estimation.offset as offset 
+import fe_sm_slip_estimation.vehicle_state_observer as vehicle_state_observer
+import fe_sm_slip_estimation.heuristic_schedule as heuristic_schedule
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import lowpassfilter
+import fe_sm_slip_estimation.lowpassfilter as lowpassfilter
 
 
 if __name__ == "__main__":

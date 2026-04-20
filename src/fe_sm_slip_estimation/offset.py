@@ -1,5 +1,5 @@
 import numpy as np
-import lowpassfilter_onestep 
+import fe_sm_slip_estimation.lowpassfilter_onestep as lowpassfilter_onestep 
 
 class GyroOffsetManager:
     """ジャイロオフセットの推定とホールドを管理するクラス"""

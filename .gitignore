@@ -214,3 +214,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+__pycache__/heuristic_schedule.cpython-313.pyc
+__pycache__/heuristic_schedule.cpython-313.pyc
