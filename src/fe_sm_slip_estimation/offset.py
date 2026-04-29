@@ -46,21 +46,23 @@ class AxOffsetManager:
         """
         # --- アクティベーションロジック (第4章 B項) ---
         # 1. 車両が動いている (Vx > 0)
-        cond1 = vx > 0.1
+        cond1 = vx > 0
         # 2. 加速度が小さい (|Ax| < 1 m/s^2)
         cond2 = abs(ax_raw) < 1.0
         # 3. 直進している (|omega_z| <= 5 deg/s) ※単位はシステムに合わせて調整してください
-        cond3 = abs(np.degrees(omega_z)) <= 5.0
+        cond3 = abs(np.degrees(omega_z)) <= 5.0*3.14/180
 
+        
         if cond1 and cond2 and cond3:
             # 条件成立時: (センサ値 - 理論値) の不一致分をオフセットとして学習
             error = ax_raw - dvx_dt
             self.current_offset = self.offset_filter.filter(error)
+            flag = 1
         else:
             # 条件不成立時: フィルタを回さず、現在の値をホールド
-            pass
+            flag = 0
 
-        return ax_raw - self.current_offset
+        return ax_raw - self.current_offset, self.current_offset, flag
     
 class AyOffsetManager:
     """横加速度(Ay)のオフセット推定とホールドを管理"""
@@ -77,15 +79,16 @@ class AyOffsetManager:
         """
         # --- アクティベーションロジック (第4章 C項) ---
         # Ayの場合、一般的には「走行中」であることが条件となります
-        is_moving = vx > 0.5 
+        is_moving = vx > -0.1 
 
         if is_moving:
             # 推定式: ΔAy = Aoff_y - (omega_z * Vx)
             # 長期平均で Vy_dot がゼロになるという仮定に基づき、差分をフィルタリング
             error = ay_raw - (omega_z * vx)
             self.current_offset = self.offset_filter.filter(error)
+            flag =1
         else:
             # 停止中などはホールド
-            pass
+            flag = 0
 
-        return ay_raw - self.current_offset
+        return ay_raw - self.current_offset, self.current_offset, flag

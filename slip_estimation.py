@@ -33,10 +33,10 @@ if __name__ == "__main__":
 
     output_data.iloc[:, 0] = output_data.iloc[:, 0] - output_data.iloc[0, 0]
     output_data.iloc[:,1] = -output_data.iloc[:,1]
-    output_data.iloc[:,2] = -output_data.iloc[:,2] + 0.2
+    output_data.iloc[:,2] = -output_data.iloc[:,2] 
     output_data.iloc[:,3] = -output_data.iloc[:,3]
     output_data.iloc[:,4] = -output_data.iloc[:,4] 
-    output_data.iloc[:,5] = -output_data.iloc[:,5] + 0.15
+    output_data.iloc[:,5] = -output_data.iloc[:,5] 
     output_data.iloc[:,6] = -output_data.iloc[:,6] 
     output_data.iloc[:,9] = lowpassfilter.lowpass_filter(output_data.iloc[:,9], cutoff_freq=2, T=0.01)
     output_data.iloc[:,10] = lowpassfilter.lowpass_filter(output_data.iloc[:,10], cutoff_freq=2.0, T=0.01)
@@ -52,21 +52,26 @@ if __name__ == "__main__":
     StrDotFilter = lpfs.LowPassFilterOnestep(cutoff_freq=10.0, T=0.01)
     OmegaZDotFilter = lpfs.LowPassFilterOnestep(cutoff_freq=10.0, T=0.01)
     BetaDotFilter = lpfs.LowPassFilterOnestep(cutoff_freq=10.0, T=0.01)
-    dVxDtFilter = lpfs.LowPassFilterOnestep(cutoff_freq=10.0, T=0.01)
+    dVxDtFilter = lpfs.LowPassFilterOnestep(cutoff_freq=2.0, T=0.01)
 
     GyroOffset = offset.GyroOffsetManager(cutoff_period=150.0, T=0.01,V_threshold=0.01)
-    AxOffset = offset.AxOffsetManager(cutoff_period=1500.0, T=0.01)
-    AyOffset = offset.AyOffsetManager(cutoff_period=1500.0, T=0.01)
+    AxOffset = offset.AxOffsetManager(cutoff_period=150.0, T=0.01)
+    AyOffset = offset.AyOffsetManager(cutoff_period=150.0, T=0.01)
 
     VelEst = lse.VelocityEstimator(
         s_time=0.01, s1=4.5, s2=1.0, track=0.165, ax_threshold=1.0)
 
     BetaEst = vehicle_state_observer.VehicleStateObserver(10,5,10,0.01)
     beta_hat_storage = np.zeros(len(output_data))
-    test_dV_hat_storage = np.zeros((len(output_data), 4))
+    element_dV_hat_storage = np.zeros((len(output_data), 4))
     V_hat = np.zeros((len(output_data),2))  
+    dot_V_hat = np.zeros((len(output_data),2))
+    offsetedAxy_strage = np.zeros((len(output_data),2))
     V_est_array = np.zeros((len(output_data)))
     F_array = np.zeros((len(output_data)))
+
+    test_Axoffset_storage = np.zeros((len(output_data),2)) 
+    test_Ayoffset_storage = np.zeros((len(output_data),2)) 
 
     for i in range(1, len(output_data.iloc[:,0])):
         # print(f"i: {output_data.iloc[i,0]}")
@@ -104,9 +109,20 @@ if __name__ == "__main__":
         #######offset#######
         omega_z_offset = GyroOffset.estimate(omega_z_raw,V_est)
         dvx_dt = dVxDtFilter.filter((V_est - Vx_prev)/(time - time_prev))
-        Ax_offset = AxOffset.estimate(Ax_raw, dvx_dt, V_est, omega_z)
-        Ay_offset = AyOffset.estimate(Ay_raw,V_est, omega_z)
-        #####
+        Ax_offset,offset_value_x, flag_x = AxOffset.estimate(Ax_raw, dvx_dt, V_est, omega_z)
+        Ay_offset,offset_value_y, flag_y = AyOffset.estimate(Ay_raw,V_est, omega_z)
+        offsetedAxy_strage[i,0] = Ax_offset
+        offsetedAxy_strage[i,1] = Ay_offset
+
+        test_Axoffset_storage[i,0] = offset_value_x
+        test_Axoffset_storage[i,1] = flag_x
+        test_Ayoffset_storage[i,0] = offset_value_y
+        test_Ayoffset_storage[i,1] = flag_y
+
+
+        # Ax_offset = Ax_raw
+        # Ay_offset = Ay_raw
+        ####
 
         #######heuristic schedule#######        
         F_str = heuristic_schedule.heuristic_schedule(str, str_dot, 0.1, 0.1 )
@@ -119,15 +135,17 @@ if __name__ == "__main__":
         ###########################
         # beta_hat_deg = BetaEst.update_state(Ay_offset, Ax_offset,  omega_z_offset,   V_est,  F_t=F)
         # 修正後のコード
-        beta_hat_deg, test_dV_dat = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
+        beta_hat_deg, element_dV_dat = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
         # beta_hat_deg = BetaEst.update_state(Ax_offset, Ay_offset,  omega_z_offset,   V_est,  F_t=F)
 
         beta_hat_storage[i] = beta_hat_deg
-        test_dV_hat_storage[i,0:4] = test_dV_dat.T
+        element_dV_hat_storage[i,0:4] = element_dV_dat.T
         
         beta_dot = BetaEst.get_estimated_slip_angle_dot()
         V_hat[i] = BetaEst.get_estimated_velocity()
-        print("dV_hat:", test_dV_dat, "V_hat", V_hat[i])
+        dot_V_hat[i] = BetaEst.get_estimated_dotvelocity()
+
+        print("dV_hat:", element_dV_dat, "V_hat", V_hat[i])
         if i < 10:
            print("V_hat:", V_hat[i])
         V_est_array[i] = V_est
@@ -165,6 +183,46 @@ if __name__ == "__main__":
     plt.ylabel('Value')
     plt.title('Data Plot')
     plt.legend()
+    # plt.show()
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(output_data.iloc[:,0]/1000.0, element_dV_hat_storage[:,0], label='0') 
+    plt.plot(output_data.iloc[:,0]/1000.0, element_dV_hat_storage[:,1], label='1') 
+    plt.plot(output_data.iloc[:,0]/1000.0, element_dV_hat_storage[:,2], label='2')
+    plt.plot(output_data.iloc[:,0]/1000.0, element_dV_hat_storage[:,3], label='3')
+
+    plt.plot(output_data.iloc[:,0]/1000.0, dot_V_hat[:,0], label='2')
+    plt.plot(output_data.iloc[:,0]/1000.0, dot_V_hat[:,1], label='3')
+    plt.grid(True)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Value')
+    plt.title('Data Plot')
+    plt.legend()
+    
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:,2], label='x') 
+    plt.plot(output_data.iloc[:,0]/1000.0, output_data.iloc[:,1], label='y') 
+
+    plt.plot(output_data.iloc[:,0]/1000.0, offsetedAxy_strage[:,0], label='x_offset')
+    plt.plot(output_data.iloc[:,0]/1000.0, offsetedAxy_strage[:,1], label='y_offset')
+    plt.grid(True)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Value')
+    plt.title('Data Plot')
+    plt.legend()
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(output_data.iloc[:,0]/1000.0, test_Axoffset_storage[:,0], label='x_erorr') 
+    plt.plot(output_data.iloc[:,0]/1000.0, test_Axoffset_storage[:,1], label='x_flag') 
+    plt.plot(output_data.iloc[:,0]/1000.0, test_Ayoffset_storage[:,0], label='y_erorr') 
+    plt.plot(output_data.iloc[:,0]/1000.0, test_Ayoffset_storage[:,1], label='y_flag') 
+    plt.grid(True)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Value')
+    plt.title('Data Plot')
+    plt.legend()
+
     plt.show()
 
 

@@ -4,7 +4,7 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from typing import Annotated
 import math
-import runge_kutta 
+import fe_sm_slip_estimation.runge_kutta as runge_kutta
 
 Vector4 = Annotated[np.ndarray, "4次元ベクトル"]
 Vector6 = Annotated[np.ndarray, "6次元ベクトル"]

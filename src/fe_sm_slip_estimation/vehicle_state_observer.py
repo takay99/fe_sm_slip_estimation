@@ -187,6 +187,10 @@ class VehicleStateObserver:
         """推定された縦速度と横速度を返します。"""
         return self.V_hat[0], self.V_hat[1]
 
+    def get_estimated_dotvelocity(self):
+        """推定された縦速度の微分と横速度の微分を返します。"""
+        return self.dV_hat_dt
+
     def get_estimated_slip_angle_dot(self):
         """推定された横滑り角速度を返します。"""
         # beta_hat_dot = np.arctan2(self.dV_hat_dt[0], -self.dV_hat_dt[1])
